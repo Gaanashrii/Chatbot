@@ -1,189 +1,133 @@
-🏥🤖 Medical LLM Chatbot
+🏥🤖 Medical Chatbot using LLM
 
-A secure, intelligent, and advanced Medical Chatbot powered by Large Language Models (LLMs) using Python.
-This chatbot provides general medical information, symptom guidance, and health literacy support, with built-in safety filters, disclaimers, and LLM-guardrails.
+A smart, interactive, and reliable Medical AI Chatbot built using Large Language Models (LLMs). This chatbot helps users get instant answers to basic medical queries, symptom information, and health guidance — not as a doctor, but as an AI assistant designed for awareness and initial guidance.
 
-⚠️ This system is NOT a medical diagnostic tool. It does not replace licensed healthcare professionals.
+🌟 Features
 
-🚀 Key Features
-🧠 AI & Medical Intelligence
+🧠 LLM-powered medical conversations
 
-LLM-powered medical Q&A
+💬 Provides symptom descriptions and general health information
 
-Symptom explanation & general advice
+⚕️ Gives non-diagnostic, safe health guidance
 
-Medical terminology simplification
+📚 Supports medical terminology understanding
 
-Context-aware conversation flow
+🔒 Built-in safety & disclaimer system
 
-🛡️ Safety & Reliability
+🔌 Easy to integrate into any web or mobile app
 
-Multi-layer medical safety guardrails
+🚀 Simple API-based architecture
 
-Automatic clinical disclaimer replies
+🛠️ Customizable model, temperature, prompts, and persona
 
-Restricted outputs for unsafe topics
+🛠️ Tech Stack
 
-Bias & hallucination reduction techniques
+Backend: Python / Node.js (choose your version)
 
-⚙️ Developer Features
+Model: OpenAI GPT / Llama / HuggingFace Models
 
-FastAPI backend
+Framework (optional): Flask / FastAPI / Express.js
 
-Modular Python architecture
+Frontend (optional): HTML / CSS / React
 
-Custom system & safety prompts
+If you tell me your exact tech (Python or Node), I can tailor this section.
 
-Pluggable LLM providers (OpenAI / Llama / HuggingFace)
+⚠️ Safety Disclaimer (Built-In)
 
-Environment-driven configuration
+This chatbot:
 
-Easy Docker deployment
+❌ Does not provide medical diagnosis
 
-🏗️ System Architecture
-                    ┌─────────────────────────────┐
-                    │        User Interface        │
-                    │ (Web / Mobile / Postman)     │
-                    └──────────────┬──────────────┘
-                                   │
-                                   ▼
-                    ┌─────────────────────────────┐
-                    │          FastAPI API         │
-                    ├──────────────────────────────┤
-                    │  /chat endpoint              │
-                    │  Safety layer middleware     │
-                    │  Response formatter          │
-                    └──────────────┬──────────────┘
-                                   │
-                                   ▼
-                    ┌─────────────────────────────┐
-                    │     LLM Engine (Python)      │
-                    │  - OpenAI GPT                │
-                    │  - Llama / HF Transformers   │
-                    └──────────────┬──────────────┘
-                                   │
-                                   ▼
-                    ┌─────────────────────────────┐
-                    │  Medical Safety Prompts      │
-                    │  Symptom Rules Engine        │
-                    │  Disclaimer Generator        │
-                    └─────────────────────────────┘
+❌ Does not replace professional doctors
 
-📦 Installation & Setup
-1️⃣ Clone the repository
+✔️ Provides general health information only
+
+✔️ Always recommends consulting a certified medical professional for serious symptoms
+
+📦 Installation
+1️⃣ Clone the project
 git clone https://github.com/yourusername/medical-llm-chatbot.git
 cd medical-llm-chatbot
 
-2️⃣ Create a virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux / Mac
-venv\Scripts\activate     # Windows
-
-3️⃣ Install dependencies
+2️⃣ Install dependencies
+Python:
 pip install -r requirements.txt
 
-4️⃣ Add your API key
+Node.js:
+npm install
 
-Create a .env file:
+3️⃣ Add API Keys
 
-OPENAI_API_KEY=your_key_here
-MODEL_NAME=gpt-4o
+Create .env file:
 
-▶️ Running the Chatbot (FastAPI)
-uvicorn app:app --reload
+OPENAI_API_KEY=your_api_key_here
+MODEL_PROVIDER=openai
+
+▶️ Running the Chatbot
+Python (Flask/FastAPI):
+python app.py
+
+Node.js (Express):
+npm start
 
 
-The API will be live at:
+Your chatbot will run locally at:
 
-http://localhost:8000/docs
+http://localhost:3000
 
-
-Swagger UI automatically generated.
-
-🧩 API Documentation
-POST /chat
-
-Send a user question and receive a safe medical response.
-
-Request Example
+🩺 Example Usage
+Request:
 {
-  "query": "I have a headache and light fever. What should I do?"
+  "message": "I have a sore throat and mild fever. What should I do?"
 }
 
-Response Example
+Response:
 {
-  "reply": "A mild fever with a headache can be caused by dehydration, viral infection, or stress. Drink plenty of water, rest well, and consider paracetamol if needed. If symptoms worsen or last more than 48 hours, please consult a doctor."
+  "reply": "A sore throat with a mild fever may indicate a common cold or throat infection. Stay hydrated, rest well, and consider warm fluids. If the fever persists beyond 48 hours or symptoms worsen, please consult a healthcare professional."
 }
 
-🔐 Medical Safety Layer
+🧩 Project Structure
+📁 medical-llm-chatbot
+ ├── app.py / index.js        # Main chatbot backend
+ ├── models/                  # Model config and prompt templates
+ ├── utils/                   # Helper functions
+ ├── public/                  # Frontend assets (if any)
+ ├── .env.example             # Environment variables template
+ └── README.md                # Project documentation
 
-The medical chatbot uses:
+🔧 Customization
+📝 System Prompt
 
-✅ System Safety Prompts
+You can customize the chatbot's personality and safety rules in:
 
-Never diagnose diseases
+models/system_prompt.txt
 
-Never prescribe medication or dosage
+🧠 Model Options:
 
-Always add a safety disclaimer
+GPT-4 / GPT-3.5
 
-✅ Rule-based Filters
+Llama 3
 
-Detect emergency symptoms
+HuggingFace medical tuned models
 
-Provide correct escalation steps
+💬 Add Medical Datasets
 
-Avoid harmful advice
+Optional integrations:
 
-✅ LLM Guardrails
+Symptoms + conditions dataset
 
-No hallucinated medicines
+Drug information
 
-No fabricated facts
+Emergency triage rules
 
-Encourages professional consultation
+🚀 Deployment
+Deploy to Vercel
+vercel deploy
 
-📁 Project Structure
-📦 medical-llm-chatbot
- ├── app.py                 # FastAPI main application
- ├── services/
- │     ├── llm_engine.py    # LLM communication layer
- │     ├── safety.py        # Safety + medical rules
- │     └── prompts.py       # System & safety prompts
- ├── models/
- │     └── request_model.py # Request/response schemas
- ├── .env                   # API keys
- ├── requirements.txt
- ├── README.md
- └── Dockerfile
+Deploy to Render
 
-🧰 Customization Options
+Connect your GitHub repo
 
-You can easily extend:
+Add environment variables
 
-🔹 Model Selection
-MODEL_NAME = "gpt-4o"  # or llama3, mistral, medllama
-
-🔹 Temperature
-temperature=0.2
-
-🔹 Medical Persona
-SYSTEM_PROMPT = """
-You are a medical information assistant.
-Provide general, safe, non-diagnostic guidance.
-"""
-
-Google Cloud Run
-
-🤝 Contributing
-
-Contributions are welcome!
-You can help with:
-
-Medical dataset improvement
-
-UI interface
-
-Better safety guardrails
-
-Additional provider integrations
+Deploy automatically
