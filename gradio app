@@ -1,0 +1,136 @@
+import os
+import subprocess
+import platform
+from dotenv import load_dotenv
+import gradio as gr
+import httpx
+import speech_recognition as sr
+from pydub import AudioSegment
+from io import BytesIO
+from faster_whisper import WhisperModel
+from gtts import gTTS
+import elevenlabs
+from elevenlabs.client import ElevenLabs
+
+# Load environment variables from .env file
+load_dotenv()
+
+# API Keys from .env
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+
+# === VOICE INPUT ===
+def record_audio(file_path, timeout=20, phrase_time_limit=None):
+    recognizer = sr.Recognizer()
+    try:
+        with sr.Microphone() as source:
+            recognizer.adjust_for_ambient_noise(source, duration=1)
+            audio_data = recognizer.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
+            wav_data = audio_data.get_wav_data()
+            audio_segment = AudioSegment.from_wav(BytesIO(wav_data))
+            audio_segment.export(file_path, format="mp3", bitrate="128k")
+    except Exception as e:
+        print(f"❌ Error in recording: {e}")
+
+# === TRANSCRIPTION ===
+def transcribe_with_faster_whisper(audio_filepath):
+    try:
+        model = WhisperModel("base", compute_type="int8")
+        segments, _ = model.transcribe(audio_filepath)
+        return " ".join([seg.text.strip() for seg in segments])
+    except Exception as e:
+        print(f"❌ Transcription error: {e}")
+        return None
+
+# === GROQ LLM ===
+def analyze_symptoms(user_input: str) -> str:
+    if not GROQ_API_KEY:
+        raise EnvironmentError("❌ GROQ_API_KEY not set in .env")
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "llama3-70b-8192",
+        "messages": [
+            {"role": "system", "content": "You have to act as a professional doctor. Keep your answer concise and helpful."},
+            {"role": "user", "content": user_input}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 1024,
+    }
+    try:
+        response = httpx.post(url, headers=headers, json=data)
+        result = response.json()
+        return result["choices"][0]["message"]["content"]
+    except Exception as e:
+        return f"❌ LLM Error: {e}"
+
+# === TTS OUTPUT ===
+def text_to_speech_with_elevenlabs(input_text, output_filepath, speed=1.1):
+    if not ELEVENLABS_API_KEY:
+        raise EnvironmentError("❌ ELEVENLABS_API_KEY not set in .env")
+    client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
+    audio = client.generate(
+        text=input_text,
+        voice="Aria",
+        output_format="mp3_22050_32",
+        model="eleven_turbo_v2"
+    )
+    elevenlabs.save(audio, output_filepath)
+    audio_segment = AudioSegment.from_mp3(output_filepath)
+    audio_segment = audio_segment.speedup(playback_speed=speed)
+    audio_segment.export(output_filepath, format="wav")
+
+# === PIPELINE FUNCTION ===
+def chatbot_pipeline(audio_file):
+    transcription = transcribe_with_faster_whisper(audio_file)
+    if not transcription:
+        return "❌ Transcription failed.", "", None
+    doctor_response = analyze_symptoms(transcription)
+    output_audio_path = "output_audio.wav"
+    text_to_speech_with_elevenlabs(doctor_response, output_audio_path)
+    return transcription, doctor_response, output_audio_path
+
+# === GRADIO INTERFACE ===
+with gr.Blocks(theme=gr.themes.Soft()) as demo:
+    gr.Markdown("""
+    <div style='text-align: center; font-size: 30px; font-weight: bold;'>🩺 Baymax: Personal Healthcare Assistant</div>
+    <div style='text-align: center; font-size: 18px; margin-bottom: 20px;'>Speak your symptoms — Baymax will listen, analyze, and respond like a real doctor.</div>
+    """)
+    
+    with gr.Row():
+        with gr.Column(scale=1):
+            audio_input = gr.Audio(
+                sources=["microphone"], 
+                type="filepath", 
+                label="🎤 Record Your Voice",
+                interactive=True
+            )
+            btn = gr.Button("🧠 Start Diagnosis", size="lg")
+
+        with gr.Column(scale=1):
+            audio_output = gr.Audio(label="🔊 Doctor's Voice Reply", interactive=False)
+
+    with gr.Row():
+        with gr.Column():
+            output_text = gr.Textbox(
+                label="📝 Transcribed Text", 
+                placeholder="Your spoken input will appear here...", 
+                lines=4
+            )
+        with gr.Column():
+            doctor_reply = gr.Textbox(
+                label="👨‍⚕️ Doctor's Response", 
+                placeholder="The AI doctor's reply will appear here...", 
+                lines=4
+            )
+
+    btn.click(fn=chatbot_pipeline, inputs=audio_input, outputs=[output_text, doctor_reply, audio_output])
+
+
+if __name__ == "__main__":
+    demo.launch()
+
+#http://127.0.0.1:7860 
