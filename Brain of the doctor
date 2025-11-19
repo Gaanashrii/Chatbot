@@ -1,0 +1,48 @@
+import httpx
+import os
+from dotenv import load_dotenv
+
+# ✅ Load environment variables from .env
+load_dotenv()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+MODEL_NAME = "llama3-70b-8192"
+
+def check_env_variables():
+    if not GROQ_API_KEY:
+        raise EnvironmentError("❌ GROQ_API_KEY is not set in environment variables.")
+
+def get_groq_response(user_input: str) -> str:
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": MODEL_NAME,
+        "messages": [
+            {"role": "system", "content": "You are an expert doctor helping patients."},
+            {"role": "user", "content": user_input}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 1024,
+    }
+
+    try:
+        response = httpx.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        result = response.json()
+        return result["choices"][0]["message"]["content"]
+    except httpx.HTTPStatusError as e:
+        return f"❌ HTTP error: {e.response.status_code} - {e.response.text}"
+    except Exception as e:
+        return f"❌ Error occurred: {str(e)}"
+
+def analyze_symptoms(user_input: str) -> str:
+    check_env_variables()
+    return get_groq_response(user_input)
+
+if __name__ == "__main__":
+    user_input = "Tell me the symptoms of skin allergy."
+    doctor_response = analyze_symptoms(user_input)
+    print("🤖 Doctor (Groq) says:\n", doctor_response)
