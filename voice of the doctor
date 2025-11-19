@@ -1,0 +1,79 @@
+import os
+import subprocess
+import platform
+from gtts import gTTS
+import elevenlabs
+from elevenlabs.client import ElevenLabs
+from pydub import AudioSegment
+
+# Ensure your ElevenLabs API Key is set in your environment variables
+ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
+
+# Function to use gTTS for text to speech conversion (optimized for speed and fluency)
+def text_to_speech_with_gtts(input_text, output_filepath, speed=1.5):
+    language = "en"
+    # Using gTTS with no slow parameter (fast speech)
+    audioobj = gTTS(text=input_text, lang=language, slow=False)
+    audioobj.save(output_filepath)
+    
+    # Speed adjustment using pydub (increases playback speed by 'speed' factor)
+    audio = AudioSegment.from_mp3(output_filepath)
+    audio = audio.speedup(playback_speed=speed)  # Further increase speed (1.5x)
+    audio.export(output_filepath, format="wav")  # Convert to WAV for better quality
+
+    print(f"✅ Audio saved and adjusted speed: {output_filepath}")
+    os_name = platform.system()
+    try:
+        if os_name == "Darwin":  # macOS
+            subprocess.run(['afplay', output_filepath])
+        elif os_name == "Windows":  # Windows
+            subprocess.run(['powershell', '-c', f'(New-Object Media.SoundPlayer "{output_filepath}").PlaySync();'])
+        elif os_name == "Linux":  # Linux
+            subprocess.run(['aplay', output_filepath])  # Alternative: use 'mpg123' or 'ffplay'
+        else:
+            raise OSError("Unsupported operating system")
+    except Exception as e:
+        print(f"An error occurred while trying to play the audio: {e}")
+
+# Function to use ElevenLabs for high-quality and fast TTS (optimized for voice)
+def text_to_speech_with_elevenlabs(input_text, output_filepath, speed=1.5):
+    client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
+    
+    # High-quality voice selection (latest model for best quality)
+    # Choose a voice that sounds professional, calm, and clear like a doctor
+    # Example: "Aria" could sound professional and soothing
+    audio = client.generate(
+        text=input_text,
+        voice="Aria",  # You can experiment with different voices like "Aria", "Brian" (if available)
+        output_format="mp3_22050_32",
+        model="eleven_turbo_v2"  # Choose the highest quality model
+    )
+    
+    # Save the generated audio file
+    elevenlabs.save(audio, output_filepath)
+    
+    # Speed adjustment using pydub (increase the playback speed for fluency and fast speech)
+    audio_segment = AudioSegment.from_mp3(output_filepath)
+    audio_segment = audio_segment.speedup(playback_speed=speed)  # Faster voice
+    audio_segment.export(output_filepath, format="wav")  # Export to high-quality WAV
+
+    print(f"✅ Audio saved and adjusted speed: {output_filepath}")
+    os_name = platform.system()
+    try:
+        if os_name == "Darwin":  # macOS
+            subprocess.run(['afplay', output_filepath])
+        elif os_name == "Windows":  # Windows
+            subprocess.run(['powershell', '-c', f'(New-Object Media.SoundPlayer "{output_filepath}").PlaySync();'])
+        elif os_name == "Linux":  # Linux
+            subprocess.run(['aplay', output_filepath])  # Alternative: use 'mpg123' or 'ffplay'
+        else:
+            raise OSError("Unsupported operating system")
+    except Exception as e:
+        print(f"An error occurred while trying to play the audio: {e}")
+
+# Example Usage:
+input_text = "Hello, I am Dr. Baymax, your personal healthcare assistant. I will guide you through your health inquiries."
+output_filepath = "output_audio_doctor.wav"
+
+# Use ElevenLabs with high-quality and professional, doctor-like voice
+text_to_speech_with_elevenlabs(input_text, output_filepath, speed=1.1)  # Slightly slower for a more professional tone
